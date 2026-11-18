@@ -6,7 +6,14 @@ from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 from supabase import create_client
-
+def get_font(size):
+    try:
+        return ImageFont.truetype(
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+            size
+        )
+    except OSError:
+        return ImageFont.load_default()
 st.set_page_config(
     page_title="SEVENTEEN AI Membership",
     page_icon="🪪",
