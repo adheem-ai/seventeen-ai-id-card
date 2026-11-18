@@ -197,21 +197,26 @@ if st.button("Search Member"):
             width=5
         )
 
-        # HEADER
-        draw.text(
-            (85, 75),
-            "SEVENTEEN AI",
-            fill=white,
-            font=get_font(58)
-        )
+        # HEADER WITH SEVENTEEN AI LOGO
+logo = Image.open("logo.png").convert("RGBA")
+logo.thumbnail((100, 100))
 
-        draw.text(
-            (85, 155),
-            "INTELLIGENCE  |  INNOVATION  |  IMPACT",
-            fill=silver
-        )
+card.paste(logo, (85, 65), logo)
 
-        draw.line((80, 215, 1120, 215), fill=silver, width=3)
+draw.text(
+    (210, 80),
+    "SEVENTEEN AI",
+    fill=white,
+    font=get_font(58)
+)
+
+draw.text(
+    (210, 155),
+    "INTELLIGENCE  |  INNOVATION  |  IMPACT",
+    fill=silver
+)
+
+draw.line((80, 215, 1120, 215), fill=silver, width=3)
 
         # MEMBER PHOTOGRAPH
         try:
