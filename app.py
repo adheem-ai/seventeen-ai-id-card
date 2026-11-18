@@ -18,7 +18,7 @@ supabase = create_client(
     st.secrets["SUPABASE_KEY"]
 )
 
-BUCKET = "member-photos"
+BUCKET = "members_photos"
 
 st.title("SEVENTEEN AI")
 st.subheader("Digital Membership System")
