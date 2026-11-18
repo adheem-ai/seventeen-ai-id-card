@@ -1,11 +1,14 @@
+
 import streamlit as st
 import qrcode
 import io
-import uuid
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 from supabase import create_client
+
+
+# FONT FUNCTION
 def get_font(size):
     try:
         return ImageFont.truetype(
@@ -14,11 +17,14 @@ def get_font(size):
         )
     except OSError:
         return ImageFont.load_default()
+
+
 st.set_page_config(
     page_title="SEVENTEEN AI Membership",
     page_icon="🪪",
     layout="centered"
 )
+
 
 # CONNECT TO SUPABASE
 supabase = create_client(
@@ -30,6 +36,7 @@ BUCKET = "members_photos"
 
 st.title("SEVENTEEN AI")
 st.subheader("Digital Membership System")
+
 
 # QR VERIFICATION
 params = st.query_params
@@ -59,6 +66,7 @@ if verify_id:
 st.sidebar.title("Administration")
 
 admin_password = st.secrets["ADMIN_PASSWORD"]
+
 entered_password = st.sidebar.text_input(
     "Admin Password",
     type="password"
@@ -166,7 +174,7 @@ if st.button("Search Member"):
         st.write("Department:", member["department"])
         st.write("Email:", member["email"])
 
-        app_url = st.secrets["APP_URL"]
+        app_url = st.secrets["APP_URL"].rstrip("/")
 
         verification_url = (
             f"{app_url}/?verify={member['member_id']}"
@@ -180,9 +188,8 @@ if st.button("Search Member"):
 
         white = "#FFFFFF"
         silver = "#B8C5D8"
-        blue = "#263D65"
 
-        # Header
+        # CARD BORDER
         draw.rounded_rectangle(
             (35, 35, 1165, 715),
             radius=35,
@@ -190,14 +197,12 @@ if st.button("Search Member"):
             width=5
         )
 
+        # HEADER
         draw.text(
             (85, 75),
             "SEVENTEEN AI",
             fill=white,
-            font=ImageFont.truetype(
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-                58
-            )
+            font=get_font(58)
         )
 
         draw.text(
@@ -208,53 +213,75 @@ if st.button("Search Member"):
 
         draw.line((80, 215, 1120, 215), fill=silver, width=3)
 
-        # Member photograph
-        response = requests.get(
-            member["photo_path"], timeout=20
-        )
-        response.raise_for_status()
+        # MEMBER PHOTOGRAPH
+        try:
+            response = requests.get(
+                member["photo_path"],
+                timeout=20
+            )
+            response.raise_for_status()
 
-        photo = Image.open(
-            io.BytesIO(response.content)
-        ).convert("RGB")
+            photo_image = Image.open(
+                io.BytesIO(response.content)
+            ).convert("RGB")
 
-        photo = ImageOps.fit(photo, (330, 390))
+            photo_image = ImageOps.fit(
+                photo_image,
+                (330, 390)
+            )
 
-        card.paste(photo, (85, 265))
+            card.paste(photo_image, (85, 265))
 
-        # Member details
+        except Exception as e:
+            st.error(f"Could not load member photograph: {e}")
+            st.stop()
+
+        # MEMBER DETAILS
         draw.text(
             (465, 280),
             member["full_name"],
             fill=white,
-            font=ImageFont.truetype(
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-                38
-            )
+            font=get_font(38)
         )
 
-        draw.text((465, 365), "POSITION / ROLE", fill=silver)
-        draw.text((465, 405), member["role"], fill=white)
+        draw.text(
+            (465, 365),
+            "POSITION / ROLE",
+            fill=silver
+        )
 
-        draw.text((465, 465), "DEPARTMENT", fill=silver)
+        draw.text(
+            (465, 405),
+            member["role"],
+            fill=white
+        )
+
+        draw.text(
+            (465, 465),
+            "DEPARTMENT",
+            fill=silver
+        )
+
         draw.text(
             (465, 505),
             member["department"] or "Not specified",
             fill=white
         )
 
-        draw.text((465, 565), "MEMBERSHIP ID", fill=silver)
+        draw.text(
+            (465, 565),
+            "MEMBERSHIP ID",
+            fill=silver
+        )
+
         draw.text(
             (465, 605),
             member["member_id"],
             fill=white,
-            font=ImageFont.truetype(
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-                32
-            )
+            font=get_font(32)
         )
 
-        # QR code
+        # QR CODE
         qr_image = qr.convert("RGB").resize((190, 190))
         card.paste(qr_image, (900, 465))
 
@@ -264,12 +291,13 @@ if st.button("Search Member"):
             fill=silver
         )
 
+        # DISPLAY DIGITAL ID CARD
         st.divider()
         st.subheader("SEVENTEEN AI Digital ID Card")
 
         st.image(card, use_container_width=True)
 
-        # Download PNG
+        # DOWNLOAD PNG
         png_buffer = io.BytesIO()
         card.save(png_buffer, format="PNG")
 
@@ -280,7 +308,7 @@ if st.button("Search Member"):
             mime="image/png"
         )
 
-        # Download PDF
+        # DOWNLOAD PDF
         pdf_buffer = io.BytesIO()
         card.save(pdf_buffer, format="PDF", resolution=150)
 
@@ -293,5 +321,3 @@ if st.button("Search Member"):
 
     else:
         st.error("Member not found.")
-        
- 
