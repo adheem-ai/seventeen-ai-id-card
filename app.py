@@ -3,7 +3,8 @@ import qrcode
 import io
 import uuid
 from datetime import datetime
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont, ImageOps
+import requests
 from supabase import create_client
 
 st.set_page_config(
