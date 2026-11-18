@@ -152,12 +152,10 @@ if st.button("Search Member"):
         st.success("Member found!")
 
         st.image(member["photo_path"], width=180)
-
         st.subheader(member["full_name"])
         st.write("Membership ID:", member["member_id"])
         st.write("Role:", member["role"])
         st.write("Department:", member["department"])
-
         st.write("Email:", member["email"])
 
         app_url = st.secrets["APP_URL"]
@@ -168,17 +166,124 @@ if st.button("Search Member"):
 
         qr = qrcode.make(verification_url)
 
-        qr_buffer = io.BytesIO()
-        qr.save(qr_buffer, format="PNG")
+        # CREATE PROFESSIONAL ID CARD
+        card = Image.new("RGB", (1200, 750), "#101B35")
+        draw = ImageDraw.Draw(card)
 
-        st.image(qr_buffer.getvalue(), width=180)
+        white = "#FFFFFF"
+        silver = "#B8C5D8"
+        blue = "#263D65"
+
+        # Header
+        draw.rounded_rectangle(
+            (35, 35, 1165, 715),
+            radius=35,
+            outline=silver,
+            width=5
+        )
+
+        draw.text(
+            (85, 75),
+            "SEVENTEEN AI",
+            fill=white,
+            font=ImageFont.truetype(
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+                58
+            )
+        )
+
+        draw.text(
+            (85, 155),
+            "INTELLIGENCE  |  INNOVATION  |  IMPACT",
+            fill=silver
+        )
+
+        draw.line((80, 215, 1120, 215), fill=silver, width=3)
+
+        # Member photograph
+        response = requests.get(
+            member["photo_path"], timeout=20
+        )
+        response.raise_for_status()
+
+        photo = Image.open(
+            io.BytesIO(response.content)
+        ).convert("RGB")
+
+        photo = ImageOps.fit(photo, (330, 390))
+
+        card.paste(photo, (85, 265))
+
+        # Member details
+        draw.text(
+            (465, 280),
+            member["full_name"],
+            fill=white,
+            font=ImageFont.truetype(
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+                38
+            )
+        )
+
+        draw.text((465, 365), "POSITION / ROLE", fill=silver)
+        draw.text((465, 405), member["role"], fill=white)
+
+        draw.text((465, 465), "DEPARTMENT", fill=silver)
+        draw.text(
+            (465, 505),
+            member["department"] or "Not specified",
+            fill=white
+        )
+
+        draw.text((465, 565), "MEMBERSHIP ID", fill=silver)
+        draw.text(
+            (465, 605),
+            member["member_id"],
+            fill=white,
+            font=ImageFont.truetype(
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+                32
+            )
+        )
+
+        # QR code
+        qr_image = qr.convert("RGB").resize((190, 190))
+        card.paste(qr_image, (900, 465))
+
+        draw.text(
+            (895, 665),
+            "SCAN TO VERIFY",
+            fill=silver
+        )
+
+        st.divider()
+        st.subheader("SEVENTEEN AI Digital ID Card")
+
+        st.image(card, use_container_width=True)
+
+        # Download PNG
+        png_buffer = io.BytesIO()
+        card.save(png_buffer, format="PNG")
 
         st.download_button(
-            "Download QR Code",
-            data=qr_buffer.getvalue(),
-            file_name=f"{member['member_id']}_QR.png",
+            "Download ID Card (PNG)",
+            data=png_buffer.getvalue(),
+            file_name=f"{member['member_id']}_ID.png",
             mime="image/png"
+        )
+
+        # Download PDF
+        pdf_buffer = io.BytesIO()
+        card.save(pdf_buffer, format="PDF", resolution=150)
+
+        st.download_button(
+            "Download ID Card (PDF)",
+            data=pdf_buffer.getvalue(),
+            file_name=f"{member['member_id']}_ID.pdf",
+            mime="application/pdf"
         )
 
     else:
         st.error("Member not found.")
+        
+ 
