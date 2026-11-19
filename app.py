@@ -19,6 +19,7 @@ def get_font(size):
         return ImageFont.load_default()
 
 
+# PAGE SETTINGS
 st.set_page_config(
     page_title="SEVENTEEN AI Membership",
     page_icon="🪪",
@@ -51,11 +52,16 @@ if verify_id:
 
     if result.data:
         member = result.data[0]
+
         st.success("✓ VERIFIED MEMBER")
         st.write("**Name:**", member["full_name"])
         st.write("**Membership ID:**", member["member_id"])
         st.write("**Role:**", member["role"])
         st.write("**Department:**", member["department"])
+
+        if member.get("photo_path"):
+            st.image(member["photo_path"], width=180)
+
     else:
         st.error("Membership not found.")
 
@@ -74,11 +80,13 @@ entered_password = st.sidebar.text_input(
 
 if entered_password != admin_password:
     st.info("Welcome to SEVENTEEN AI Digital Membership.")
-    st.warning("Administrator login is required to register members.")
+    st.warning(
+        "Administrator login is required to register members."
+    )
     st.stop()
 
 
-# REGISTRATION
+# REGISTER NEW MEMBER
 st.header("Register New Member")
 
 with st.form("registration_form"):
@@ -106,7 +114,9 @@ with st.form("registration_form"):
 
                 existing = supabase.table("members").select(
                     "member_id"
-                ).like("member_id", f"SAI-{year}-%").execute()
+                ).like(
+                    "member_id", f"SAI-{year}-%"
+                ).execute()
 
                 numbers = [
                     int(x["member_id"].split("-")[-1])
@@ -158,171 +168,205 @@ search_id = st.text_input("Enter Membership ID")
 
 if st.button("Search Member"):
 
-    result = supabase.table("members").select("*").eq(
-        "member_id", search_id.strip()
-    ).execute()
+    try:
+        result = supabase.table("members").select("*").eq(
+            "member_id", search_id.strip()
+        ).execute()
 
-    if result.data:
-        member = result.data[0]
+        if result.data:
+            member = result.data[0]
 
-        st.success("Member found!")
+            st.success("Member found!")
 
-        st.image(member["photo_path"], width=180)
-        st.subheader(member["full_name"])
-        st.write("Membership ID:", member["member_id"])
-        st.write("Role:", member["role"])
-        st.write("Department:", member["department"])
-        st.write("Email:", member["email"])
+            st.image(member["photo_path"], width=180)
+            st.subheader(member["full_name"])
+            st.write("Membership ID:", member["member_id"])
+            st.write("Role:", member["role"])
+            st.write("Department:", member["department"])
+            st.write("Email:", member["email"])
 
-        app_url = st.secrets["APP_URL"].rstrip("/")
+            # VERIFICATION QR CODE
+            app_url = st.secrets["APP_URL"].rstrip("/")
 
-        verification_url = (
-            f"{app_url}/?verify={member['member_id']}"
-        )
-
-        qr = qrcode.make(verification_url)
-
-        # CREATE PROFESSIONAL ID CARD
-        card = Image.new("RGB", (1200, 750), "#101B35")
-        draw = ImageDraw.Draw(card)
-
-        white = "#FFFFFF"
-        silver = "#B8C5D8"
-
-        # CARD BORDER
-        draw.rounded_rectangle(
-            (35, 35, 1165, 715),
-            radius=35,
-            outline=silver,
-            width=5
-        )
-
-        # HEADER WITH SEVENTEEN AI LOGO
-logo = Image.open("logo.png").convert("RGBA")
-logo.thumbnail((100, 100))
-
-card.paste(logo, (85, 65), logo)
-
-draw.text(
-    (210, 80),
-    "SEVENTEEN AI",
-    fill=white,
-    font=get_font(58)
-)
-
-draw.text(
-    (210, 155),
-    "INTELLIGENCE  |  INNOVATION  |  IMPACT",
-    fill=silver
-)
-
-draw.line((80, 215, 1120, 215), fill=silver, width=3)
-
-        # MEMBER PHOTOGRAPH
-        try:
-            response = requests.get(
-                member["photo_path"],
-                timeout=20
-            )
-            response.raise_for_status()
-
-            photo_image = Image.open(
-                io.BytesIO(response.content)
-            ).convert("RGB")
-
-            photo_image = ImageOps.fit(
-                photo_image,
-                (330, 390)
+            verification_url = (
+                f"{app_url}/?verify={member['member_id']}"
             )
 
-            card.paste(photo_image, (85, 265))
+            qr = qrcode.make(verification_url)
 
-        except Exception as e:
-            st.error(f"Could not load member photograph: {e}")
-            st.stop()
+            # CREATE ID CARD
+            card = Image.new(
+                "RGB",
+                (1200, 750),
+                "#101B35"
+            )
 
-        # MEMBER DETAILS
-        draw.text(
-            (465, 280),
-            member["full_name"],
-            fill=white,
-            font=get_font(38)
-        )
+            draw = ImageDraw.Draw(card)
 
-        draw.text(
-            (465, 365),
-            "POSITION / ROLE",
-            fill=silver
-        )
+            white = "#FFFFFF"
+            silver = "#B8C5D8"
 
-        draw.text(
-            (465, 405),
-            member["role"],
-            fill=white
-        )
+            # CARD BORDER
+            draw.rounded_rectangle(
+                (35, 35, 1165, 715),
+                radius=35,
+                outline=silver,
+                width=5
+            )
 
-        draw.text(
-            (465, 465),
-            "DEPARTMENT",
-            fill=silver
-        )
+            # LOGO AND HEADER
+            try:
+                logo = Image.open("logo.png").convert("RGBA")
+                logo.thumbnail((100, 100))
 
-        draw.text(
-            (465, 505),
-            member["department"] or "Not specified",
-            fill=white
-        )
+                card.paste(logo, (85, 65), logo)
 
-        draw.text(
-            (465, 565),
-            "MEMBERSHIP ID",
-            fill=silver
-        )
+            except Exception as e:
+                st.error(f"Logo could not be loaded: {e}")
+                st.stop()
 
-        draw.text(
-            (465, 605),
-            member["member_id"],
-            fill=white,
-            font=get_font(32)
-        )
+            draw.text(
+                (210, 80),
+                "SEVENTEEN AI",
+                fill=white,
+                font=get_font(58)
+            )
 
-        # QR CODE
-        qr_image = qr.convert("RGB").resize((190, 190))
-        card.paste(qr_image, (900, 465))
+            draw.text(
+                (210, 155),
+                "INTELLIGENCE  |  INNOVATION  |  IMPACT",
+                fill=silver
+            )
 
-        draw.text(
-            (895, 665),
-            "SCAN TO VERIFY",
-            fill=silver
-        )
+            draw.line(
+                (80, 215, 1120, 215),
+                fill=silver,
+                width=3
+            )
 
-        # DISPLAY DIGITAL ID CARD
-        st.divider()
-        st.subheader("SEVENTEEN AI Digital ID Card")
+            # MEMBER PHOTOGRAPH
+            try:
+                response = requests.get(
+                    member["photo_path"],
+                    timeout=20
+                )
 
-        st.image(card, use_container_width=True)
+                response.raise_for_status()
 
-        # DOWNLOAD PNG
-        png_buffer = io.BytesIO()
-        card.save(png_buffer, format="PNG")
+                photo_image = Image.open(
+                    io.BytesIO(response.content)
+                ).convert("RGB")
 
-        st.download_button(
-            "Download ID Card (PNG)",
-            data=png_buffer.getvalue(),
-            file_name=f"{member['member_id']}_ID.png",
-            mime="image/png"
-        )
+                photo_image = ImageOps.fit(
+                    photo_image,
+                    (330, 390)
+                )
 
-        # DOWNLOAD PDF
-        pdf_buffer = io.BytesIO()
-        card.save(pdf_buffer, format="PDF", resolution=150)
+                card.paste(photo_image, (85, 265))
 
-        st.download_button(
-            "Download ID Card (PDF)",
-            data=pdf_buffer.getvalue(),
-            file_name=f"{member['member_id']}_ID.pdf",
-            mime="application/pdf"
-        )
+            except Exception as e:
+                st.error(f"Could not load member photograph: {e}")
+                st.stop()
 
-    else:
-        st.error("Member not found.")
+            # MEMBER DETAILS
+            draw.text(
+                (465, 280),
+                member["full_name"],
+                fill=white,
+                font=get_font(38)
+            )
+
+            draw.text(
+                (465, 365),
+                "POSITION / ROLE",
+                fill=silver
+            )
+
+            draw.text(
+                (465, 405),
+                member["role"],
+                fill=white
+            )
+
+            draw.text(
+                (465, 465),
+                "DEPARTMENT",
+                fill=silver
+            )
+
+            draw.text(
+                (465, 505),
+                member["department"] or "Not specified",
+                fill=white
+            )
+
+            draw.text(
+                (465, 565),
+                "MEMBERSHIP ID",
+                fill=silver
+            )
+
+            draw.text(
+                (465, 605),
+                member["member_id"],
+                fill=white,
+                font=get_font(32)
+            )
+
+            # QR CODE ON CARD
+            qr_image = qr.convert("RGB").resize((190, 190))
+
+            card.paste(qr_image, (900, 465))
+
+            draw.text(
+                (895, 665),
+                "SCAN TO VERIFY",
+                fill=silver
+            )
+
+            # DISPLAY DIGITAL ID CARD
+            st.divider()
+
+            st.subheader("SEVENTEEN AI Digital ID Card")
+
+            st.image(
+                card,
+                use_container_width=True
+            )
+
+            # DOWNLOAD PNG
+            png_buffer = io.BytesIO()
+
+            card.save(
+                png_buffer,
+                format="PNG"
+            )
+
+            st.download_button(
+                "Download ID Card (PNG)",
+                data=png_buffer.getvalue(),
+                file_name=f"{member['member_id']}_ID.png",
+                mime="image/png"
+            )
+
+            # DOWNLOAD PDF
+            pdf_buffer = io.BytesIO()
+
+            card.save(
+                pdf_buffer,
+                format="PDF",
+                resolution=150
+            )
+
+            st.download_button(
+                "Download ID Card (PDF)",
+                data=pdf_buffer.getvalue(),
+                file_name=f"{member['member_id']}_ID.pdf",
+                mime="application/pdf"
+            )
+
+        else:
+            st.error("Member not found.")
+
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
