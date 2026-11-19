@@ -216,7 +216,7 @@ if st.button("Search Member"):
 
             # LOGO AND HEADER
             try:
-                logo = Image.open("logo.png").convert("RGBA")
+                logo = Image.open("logo.jpg").convert("RGBA")
                 logo.thumbnail((100, 100))
 
                 card.paste(logo, (85, 65), logo)
