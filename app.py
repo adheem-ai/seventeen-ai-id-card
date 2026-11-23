@@ -153,8 +153,7 @@ try:
                 st.rerun()
 
             if delete_button:
-    if confirm_delete:
-        supabase.table("members").delete().eq(
+                supabase.table("members").delete().eq(
             "member_id", selected_id
         ).execute()
 
