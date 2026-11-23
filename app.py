@@ -65,11 +65,15 @@ if verify_id:
         if result.data:
             member = result.data[0]
 
-            st.success("✓ VERIFIED MEMBER")
-            st.write("**Name:**", member.get("full_name", ""))
-            st.write("**Membership ID:**", member.get("member_id", ""))
-            st.write("**Role:**", member.get("role", ""))
-            st.write(
+            if member.get("status", "Active") == "Active":
+                st.success("✓ ACTIVE MEMBER")
+            else:
+                st.error("⚠ INACTIVE MEMBERSHIP")
+                st.write("**Status:**", member.get("status", "Active"))
+                st.write("**Name:**", member.get("full_name", ""))
+                st.write("**Membership ID:**", member.get("member_id", ""))
+                st.write("**Role:**", member.get("role", ""))
+                st.write(
                 "**Department:**",
                 member.get("department") or "Not specified"
             )
