@@ -211,6 +211,10 @@ try:
                     "Department",
                     value=member.get("department") or ""
                 )
+                new_status = st.selectbox(
+                    "Membership Status",
+                    ["Active", "Inactive"]
+                )
 
                 confirm_delete = st.checkbox(
                     f"I understand that {member.get('full_name', 'this member')} "
@@ -231,7 +235,8 @@ try:
                                 "full_name": new_name.strip(),
                                 "email": new_email.strip().lower(),
                                 "role": new_role.strip(),
-                                "department": new_department.strip()
+                                "department": new_department.strip(),
+                                "status": new_status
                             })
                             .eq("member_id", selected_id)
                             .execute()
