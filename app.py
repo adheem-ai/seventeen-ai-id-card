@@ -141,7 +141,7 @@ try:
             save_button = st.form_submit_button("Save Changes")
             delete_button = st.form_submit_button("Delete Member")
 
-            if save_button:
+                        if save_button:
                 supabase.table("members").update({
                     "full_name": new_name,
                     "email": new_email,
@@ -153,20 +153,23 @@ try:
                 st.rerun()
 
             if delete_button:
-                supabase.table("members").delete().eq(
-            "member_id", selected_id
-        ).execute()
+                if confirm_delete:
+                    supabase.table("members").delete().eq(
+                        "member_id", selected_id
+                    ).execute()
 
-        st.success("Member deleted successfully!")
-        st.rerun()
-    else:
-        st.warning(
-            "Please tick the confirmation box before deleting."
-        )
+                    st.success("Member deleted successfully!")
+                    st.rerun()
+                else:
+                    st.warning(
+                        "Please tick the confirmation box before deleting."
+                    )
 
     else:
         st.info("No members available to manage.")
 
+except Exception as e:
+    st.error(f"Member management error: {e}")
 except Exception as e:
     st.error(f"Member management error: {e}")
 # REGISTER NEW MEMBER
