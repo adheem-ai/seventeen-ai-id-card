@@ -266,27 +266,23 @@ with st.form("registration_form"):
                     photo.getv
 '''
             # MEMBER PHOTOGRAPH
-            try:
-                response = requests.get(
+        try:
+            response = requests.get(
                     member["photo_path"],
                     timeout=20
                 )
-                response.raise_for_status()
-
-                photo_image = Image.open(
+            response.raise_for_status()
+            photo_image = Image.open(
                     io.BytesIO(response.content)
                 ).convert("RGB")
-
-                photo_image = ImageOps.fit(
+            photo_image = ImageOps.fit(
                     photo_image,
                     (330, 390)
                 )
-
-                card.paste(photo_image, (85, 265))
-
-            except Exception as e:
-                st.error(f"Could not load member photograph: {e}")
-                st.stop()
+            card.paste(photo_image, (85, 265))
+        except Exception as e:
+            st.error(f"Could not load member photograph: {e}")
+            st.stop()
 
             # MEMBER DETAILS
             draw.text(
