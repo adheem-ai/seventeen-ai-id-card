@@ -1,5 +1,5 @@
 
-import streamlit as st
+'''import streamlit as st
 import qrcode
 import io
 from datetime import datetime
@@ -263,125 +263,14 @@ with st.form("registration_form"):
 
                 supabase.storage.from_(BUCKET).upload(
                     photo_path,
-                    photo.getvalue(),
-                    {"content-type": photo.type}
-                )
-
-                photo_url = supabase.storage.from_(
-                    BUCKET
-                ).get_public_url(photo_path)
-
-                member_data = {
-                    "member_id": member_id,
-                    "full_name": full_name.strip(),
-                    "email": email.strip().lower(),
-                    "role": role.strip(),
-                    "department": department.strip(),
-                    "photo_path": photo_url
-                }
-
-                supabase.table("members").insert(
-                    member_data
-                ).execute()
-
-                st.success("Member registered successfully!")
-                st.write("Membership ID:", member_id)
-
-            except Exception as e:
-                st.error(f"Registration failed: {e}")
-
-
-# MEMBER SEARCH
-st.divider()
-st.header("Find a Member")
-
-search_id = st.text_input("Enter Membership ID")
-
-if st.button("Search Member"):
-
-    try:
-        result = supabase.table("members").select("*").eq(
-            "member_id", search_id.strip()
-        ).execute()
-
-        if result.data:
-            member = result.data[0]
-
-            st.success("Member found!")
-
-            st.image(member["photo_path"], width=180)
-            st.subheader(member["full_name"])
-            st.write("Membership ID:", member["member_id"])
-            st.write("Role:", member["role"])
-            st.write("Department:", member["department"])
-            st.write("Email:", member["email"])
-
-            # VERIFICATION QR CODE
-            app_url = st.secrets["APP_URL"].rstrip("/")
-
-            verification_url = (
-                f"{app_url}/?verify={member['member_id']}"
-            )
-
-            qr = qrcode.make(verification_url)
-
-            # CREATE ID CARD
-            card = Image.new(
-                "RGB",
-                (1200, 750),
-                "#101B35"
-            )
-
-            draw = ImageDraw.Draw(card)
-
-            white = "#FFFFFF"
-            silver = "#B8C5D8"
-
-            # CARD BORDER
-            draw.rounded_rectangle(
-                (35, 35, 1165, 715),
-                radius=35,
-                outline=silver,
-                width=5
-            )
-
-            # LOGO AND HEADER
-            try:
-                logo = Image.open("logo.jpg").convert("RGBA")
-                logo.thumbnail((100, 100))
-
-                card.paste(logo, (85, 65), logo)
-
-            except Exception as e:
-                st.error(f"Logo could not be loaded: {e}")
-                st.stop()
-
-            draw.text(
-                (210, 80),
-                "SEVENTEEN AI",
-                fill=white,
-                font=get_font(58)
-            )
-
-            draw.text(
-                (210, 155),
-                "INTELLIGENCE  |  INNOVATION  |  IMPACT",
-                fill=silver
-            )
-
-            draw.line(
-                (80, 215, 1120, 215),
-                fill=silver,
-                width=3
-            )
-
+                    photo.getv
+'''
             # MEMBER PHOTOGRAPH
             try:
                 response = requests.get(
                     member["photo_path"],
                     timeout=20
                 )
-
                 response.raise_for_status()
 
                 photo_image = Image.open(
@@ -402,7 +291,7 @@ if st.button("Search Member"):
             # MEMBER DETAILS
             draw.text(
                 (465, 280),
-                member["full_name"],
+                member.get("full_name", ""),
                 fill=white,
                 font=get_font(38)
             )
@@ -410,54 +299,58 @@ if st.button("Search Member"):
             draw.text(
                 (465, 365),
                 "POSITION / ROLE",
-                fill=silver
+                fill=silver,
+                font=get_font(22)
             )
 
             draw.text(
                 (465, 405),
-                member["role"],
-                fill=white
+                member.get("role", ""),
+                fill=white,
+                font=get_font(28)
             )
 
             draw.text(
                 (465, 465),
                 "DEPARTMENT",
-                fill=silver
+                fill=silver,
+                font=get_font(22)
             )
 
             draw.text(
                 (465, 505),
-                member["department"] or "Not specified",
-                fill=white
+                member.get("department") or "Not specified",
+                fill=white,
+                font=get_font(28)
             )
 
             draw.text(
                 (465, 565),
                 "MEMBERSHIP ID",
-                fill=silver
+                fill=silver,
+                font=get_font(22)
             )
 
             draw.text(
                 (465, 605),
-                member["member_id"],
+                member.get("member_id", ""),
                 fill=white,
                 font=get_font(32)
             )
 
             # QR CODE ON CARD
             qr_image = qr.convert("RGB").resize((190, 190))
-
             card.paste(qr_image, (900, 465))
 
             draw.text(
                 (895, 665),
                 "SCAN TO VERIFY",
-                fill=silver
+                fill=silver,
+                font=get_font(20)
             )
 
             # DISPLAY DIGITAL ID CARD
             st.divider()
-
             st.subheader("SEVENTEEN AI Digital ID Card")
 
             st.image(
@@ -467,11 +360,7 @@ if st.button("Search Member"):
 
             # DOWNLOAD PNG
             png_buffer = io.BytesIO()
-
-            card.save(
-                png_buffer,
-                format="PNG"
-            )
+            card.save(png_buffer, format="PNG")
 
             st.download_button(
                 "Download ID Card (PNG)",
@@ -482,7 +371,6 @@ if st.button("Search Member"):
 
             # DOWNLOAD PDF
             pdf_buffer = io.BytesIO()
-
             card.save(
                 pdf_buffer,
                 format="PDF",
@@ -501,3 +389,4 @@ if st.button("Search Member"):
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
+
