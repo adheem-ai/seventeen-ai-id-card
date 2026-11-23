@@ -85,7 +85,89 @@ if entered_password != admin_password:
     )
     st.stop()
 
+# MEMBER MANAGEMENT
+st.divider()
+st.header("Member Management")
 
+try:
+    all_members = supabase.table("members").select(
+        "member_id, full_name, email, role, department"
+    ).execute()
+
+    member_list = all_members.data or []
+
+    if member_list:
+        member_options = {
+            f"{m['member_id']} - {m['full_name']}": m["member_id"]
+            for m in member_list
+        }
+
+        selected_member = st.selectbox(
+            "Select a member",
+            list(member_options.keys())
+        )
+
+        selected_id = member_options[selected_member]
+
+        result = supabase.table("members").select("*").eq(
+            "member_id", selected_id
+        ).execute()
+
+        member = result.data[0]
+
+        with st.form("edit_member_form"):
+            st.subheader("Edit Member Details")
+
+            new_name = st.text_input(
+                "Full Name", value=member["full_name"]
+            )
+
+            new_email = st.text_input(
+                "Email", value=member["email"]
+            )
+
+            new_role = st.text_input(
+                "Role", value=member["role"]
+            )
+
+            new_department = st.text_input(
+                "Department", value=member.get("department") or ""
+            )
+
+            confirm_delete = st.checkbox(
+                "I confirm that I want to delete this member"
+            )
+
+            save_button = st.form_submit_button("Save Changes")
+            delete_button = st.form_submit_button("Delete Member")
+
+            if save_button:
+                supabase.table("members").update({
+                    "full_name": new_name,
+                    "email": new_email,
+                    "role": new_role,
+                    "department": new_department
+                }).eq("member_id", selected_id).execute()
+
+                st.success("Member details updated successfully!")
+                st.rerun()
+
+            if delete_button:
+                if confirm_delete:
+                    supabase.table("members").delete().eq(
+                        "member_id", selected_id
+                    ).execute()
+
+                    st.success("Member deleted successfully!")
+                    st.rerun()
+                else:
+                    st.warning("Please confirm before deleting.")
+
+    else:
+        st.info("No members available to manage.")
+
+except Exception as e:
+    st.error(f"Member management error: {e}")
 # REGISTER NEW MEMBER
 
 # ADMIN DASHBOARD
