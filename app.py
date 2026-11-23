@@ -87,6 +87,51 @@ if entered_password != admin_password:
 
 
 # REGISTER NEW MEMBER
+
+# ADMIN DASHBOARD
+st.divider()
+st.header("SEVENTEEN AI Admin Dashboard")
+
+try:
+    dashboard_data = supabase.table("members").select(
+        "member_id, full_name, role, department, email"
+    ).execute()
+
+    members = dashboard_data.data or []
+
+    total_members = len(members)
+
+    departments = set(
+        m["department"]
+        for m in members
+        if m.get("department")
+    )
+
+    roles = set(
+        m["role"]
+        for m in members
+        if m.get("role")
+    )
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("Total Members", total_members)
+    col2.metric("Departments", len(departments))
+    col3.metric("Different Roles", len(roles))
+
+    st.subheader("Registered Members")
+
+    if members:
+        st.dataframe(
+            members,
+            use_container_width=True
+        )
+    else:
+        st.info("No members registered yet.")
+
+except Exception as e:
+    st.error(f"Dashboard error: {e}")
+
 st.header("Register New Member")
 
 with st.form("registration_form"):
