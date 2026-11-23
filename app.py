@@ -135,7 +135,7 @@ try:
             )
 
             confirm_delete = st.checkbox(
-                "I confirm that I want to delete this member"
+    f"I understand that {member['full_name']} will be permanently deleted."
             )
 
             save_button = st.form_submit_button("Save Changes")
@@ -153,15 +153,17 @@ try:
                 st.rerun()
 
             if delete_button:
-                if confirm_delete:
-                    supabase.table("members").delete().eq(
-                        "member_id", selected_id
-                    ).execute()
+    if confirm_delete:
+        supabase.table("members").delete().eq(
+            "member_id", selected_id
+        ).execute()
 
-                    st.success("Member deleted successfully!")
-                    st.rerun()
-                else:
-                    st.warning("Please confirm before deleting.")
+        st.success("Member deleted successfully!")
+        st.rerun()
+    else:
+        st.warning(
+            "Please tick the confirmation box before deleting."
+        )
 
     else:
         st.info("No members available to manage.")
